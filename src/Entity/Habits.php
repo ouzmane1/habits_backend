@@ -2,11 +2,13 @@
 
 namespace App\Entity;
 
+use App\Enum\FrequenceType;
 use App\Repository\HabitsRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: HabitsRepository::class)]
 class Habits
@@ -17,13 +19,15 @@ class Habits
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'Le titre est obligatoire.')]
     private ?string $title = null;
 
     #[ORM\Column(type: Types::TEXT)]
     private ?string $description = null;
 
     #[ORM\Column]
-    private ?int $frequence = null;
+    #[Assert\NotNull(message: 'La fréquence est obligatoire.')]
+    private ?FrequenceType $frequence = null;
 
     #[ORM\Column(length: 255)]
     private ?string $statut = null;
@@ -78,12 +82,12 @@ class Habits
         return $this;
     }
 
-    public function getFrequence(): ?int
+    public function getFrequence(): ?FrequenceType
     {
         return $this->frequence;
     }
 
-    public function setFrequence(int $frequence): static
+    public function setFrequence(?FrequenceType $frequence): static
     {
         $this->frequence = $frequence;
 

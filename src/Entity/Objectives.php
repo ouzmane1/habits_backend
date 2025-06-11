@@ -3,8 +3,11 @@
 namespace App\Entity;
 
 use App\Repository\ObjectivesRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ObjectivesRepository::class)]
 class Objectives
@@ -15,6 +18,7 @@ class Objectives
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'Le titre est obligatoire.')]
     private ?string $titre = null;
 
     #[ORM\Column(length: 255)]
@@ -26,20 +30,22 @@ class Objectives
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTime $date_end = null;
 
-    #[ORM\Column]
-    private ?float $progres = null;
-
-    #[ORM\Column]
-    private ?float $target_value = null;
-
-    #[ORM\Column]
-    private ?float $current_value = null;
-
     #[ORM\Column(length: 255)]
     private ?string $statut = null;
 
     #[ORM\ManyToOne(inversedBy: 'objectives')]
     private ?Users $users_id = null;
+
+    /**
+     * @var Collection<int, SuiviObjective>
+     */
+    #[ORM\OneToMany(targetEntity: SuiviObjective::class, mappedBy: 'objective')]
+    private Collection $suiviObjectives;
+
+    public function __construct()
+    {
+        $this->suiviObjectives = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -101,42 +107,6 @@ class Objectives
         return $this;
     }
 
-    public function getProgres(): ?float
-    {
-        return $this->progres;
-    }
-
-    public function setProgres(float $progres): static
-    {
-        $this->progres = $progres;
-
-        return $this;
-    }
-
-    public function getTargetValue(): ?float
-    {
-        return $this->target_value;
-    }
-
-    public function setTargetValue(float $target_value): static
-    {
-        $this->target_value = $target_value;
-
-        return $this;
-    }
-
-    public function getCurrentValue(): ?float
-    {
-        return $this->current_value;
-    }
-
-    public function setCurrentValue(float $current_value): static
-    {
-        $this->current_value = $current_value;
-
-        return $this;
-    }
-
     public function getStatut(): ?string
     {
         return $this->statut;
@@ -157,6 +127,36 @@ class Objectives
     public function setUsersId(?Users $users_id): static
     {
         $this->users_id = $users_id;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, SuiviObjective>
+     */
+    public function getSuiviObjectives(): Collection
+    {
+        return $this->suiviObjectives;
+    }
+
+    public function addSuiviObjective(SuiviObjective $suiviObjective): static
+    {
+        if (!$this->suiviObjectives->contains($suiviObjective)) {
+            $this->suiviObjectives->add($suiviObjective);
+            $suiviObjective->setObjective($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSuiviObjective(SuiviObjective $suiviObjective): static
+    {
+        if ($this->suiviObjectives->removeElement($suiviObjective)) {
+            // set the owning side to null (unless already changed)
+            if ($suiviObjective->getObjective() === $this) {
+                $suiviObjective->setObjective(null);
+            }
+        }
 
         return $this;
     }

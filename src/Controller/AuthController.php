@@ -119,5 +119,21 @@ class AuthController extends AbstractController
 
         return new JsonResponse(['message' => 'Logged out']);
     }
+
+    #[Route('/api/me', name: 'api_me', methods: ['GET'])]
+    public function me(): JsonResponse
+    {
+        $user = $this->getUser();
+
+        if (!$user) {
+            return $this->json(['error' => 'Unauthorized'], 401);
+        }
+
+        return new JsonResponse([
+            'name' => $user->getName(),
+            'email' => $user->getEmail(),
+            'role' => $user->getRoles(),
+        ]);
+    }
 }
 

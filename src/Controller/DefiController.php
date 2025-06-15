@@ -71,7 +71,7 @@ class DefiController extends AbstractController
     }
 
     #[Route('/defi/{id}', name: 'api_defi_update', methods: ['PUT'])]
-    public function updateDefi(int $id, Request $request, DefiRepository $defiRepo, EntityManagerInterface $em): JsonResponse
+    public function updateDefi(int $id, Request $request, DefiRepository $defiRepo, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
     {
         $defi = $defiRepo->find($id);
         if (!$defi) {
@@ -90,6 +90,20 @@ class DefiController extends AbstractController
             $defi->setDateEnd(new \DateTime($data['date_end']));
         }
         $defi->setCreateBy($this->getUser()->getUserIdentifier());
+
+        // Validation des données
+        $errors = $validator->validate($defi);
+
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[$error->getPropertyPath()] = $error->getMessage();
+            }
+
+            return $this->json([
+                'errors' => $errorMessages
+            ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
+        }
 
         $em->persist($defi);
         $em->flush();

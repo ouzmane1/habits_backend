@@ -22,12 +22,19 @@ class Objectives
     private ?string $titre = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'La description est obligatoire.')]
     private ?string $description = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Assert\NotBlank(message: 'La date de début est obligatoire.')]
     private ?\DateTime $date_start = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Assert\NotBlank(message: 'La date de fin est obligatoire.')]
+    #[Assert\GreaterThanOrEqual(
+        propertyPath: 'date_start', 
+        message: 'La date de fin doit être supérieure ou égale à la date de début.'
+    )]
     private ?\DateTime $date_end = null;
 
     #[ORM\Column(length: 255)]

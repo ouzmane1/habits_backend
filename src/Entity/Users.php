@@ -93,6 +93,12 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: RefreshToken::class, mappedBy: 'user_id')]
     private Collection $refreshTokens;
 
+    /**
+     * @var Collection<int, DefiProgress>
+     */
+    #[ORM\OneToMany(targetEntity: DefiProgress::class, mappedBy: 'user_id')]
+    private Collection $defiProgress;
+
     public function __construct()
     {
         $this->objectives = new ArrayCollection();
@@ -101,6 +107,7 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
         $this->badges = new ArrayCollection();
         $this->defiUsers = new ArrayCollection();
         $this->refreshTokens = new ArrayCollection();
+        $this->defiProgress = new ArrayCollection();
     }
 
     public function getUsername(): string
@@ -350,6 +357,36 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($refreshToken->getUserId() === $this) {
                 $refreshToken->setUserId(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, DefiProgress>
+     */
+    public function getDefiProgress(): Collection
+    {
+        return $this->defiProgress;
+    }
+
+    public function addDefi(DefiProgress $defiProgress): static
+    {
+        if (!$this->defiProgress->contains($defiProgress)) {
+            $this->defiProgress->add($defiProgress);
+            $defiProgress->setUserId($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDefi(DefiProgress $defiProgress): static
+    {
+        if ($this->defiProgress->removeElement($defiProgress)) {
+            // set the owning side to null (unless already changed)
+            if ($defiProgress->getUserId() === $this) {
+                $defiProgress->setUserId(null);
             }
         }
 

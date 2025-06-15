@@ -2,45 +2,42 @@
 
 namespace App\Repository;
 
-use App\Entity\Badges;
-use App\Entity\Habits;
-use App\Entity\Users;
+use App\Entity\DefiProgress;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<Badges>
+ * @extends ServiceEntityRepository<DefiProgress>
  */
-class BadgesRepository extends ServiceEntityRepository
+class DefiProgressRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, Badges::class);
+        parent::__construct($registry, DefiProgress::class);
     }
 
     //    /**
-    //     * @return Badges[] Returns an array of Badges objects
+    //     * @return DefiProgress[] Returns an array of DefiProgress objects
     //     */
     //    public function findByExampleField($value): array
     //    {
-    //        return $this->createQueryBuilder('b')
-    //            ->andWhere('b.exampleField = :val')
+    //        return $this->createQueryBuilder('d')
+    //            ->andWhere('d.exampleField = :val')
     //            ->setParameter('val', $value)
-    //            ->orderBy('b.id', 'ASC')
+    //            ->orderBy('d.id', 'ASC')
     //            ->setMaxResults(10)
     //            ->getQuery()
     //            ->getResult()
     //        ;
     //    }
 
-    //    public function findOneBySomeField($value): ?Badges
+    //    public function findOneBySomeField($value): ?DefiProgress
     //    {
-    //        return $this->createQueryBuilder('b')
-    //            ->andWhere('b.exampleField = :val')
+    //        return $this->createQueryBuilder('d')
+    //            ->andWhere('d.exampleField = :val')
     //            ->setParameter('val', $value)
     //            ->getQuery()
     //            ->getOneOrNullResult()
     //        ;
     //    }
-        
 }

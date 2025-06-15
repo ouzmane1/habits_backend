@@ -14,7 +14,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 final class BadgeController extends AbstractController
 {
 
-    #[Route('badges/user', name: 'api_user_badges', methods: ['GET'])]
+    #[Route('/api/badges/user', name: 'api_user_badges', methods: ['GET'])]
     public function userBadges(): JsonResponse
     {
         $user = $this->getUser();
@@ -32,7 +32,7 @@ final class BadgeController extends AbstractController
         return $this->json($data);
     }
 
-    #[Route('/create/badges', name: 'api_badges_create', methods: ['POST'])]
+    #[Route('/api/create/badges', name: 'api_badges_create', methods: ['POST'])]
     public function createBadge(Request $request, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -68,7 +68,7 @@ final class BadgeController extends AbstractController
         ], Response::HTTP_CREATED);
     }
 
-    #[Route('/badges', name: 'api_badge_list', methods: ['GET'])]
+    #[Route('/api/badges', name: 'api_badge_list', methods: ['GET'])]
     public function listBadges(EntityManagerInterface $em): JsonResponse
     {
         $badges = $em->getRepository(Badges::class)->findAll();
@@ -87,7 +87,7 @@ final class BadgeController extends AbstractController
         return $this->json($data);
     }
 
-    #[Route('/badges/{id}', name: 'api_badge_update', methods: ['PUT'])]
+    #[Route('/api/badges/{id}', name: 'api_badge_update', methods: ['PUT'])]
     public function updateBadge(int $id, Request $request, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
     {
         $badge = $em->getRepository(Badges::class)->find($id);
@@ -117,7 +117,7 @@ final class BadgeController extends AbstractController
         return $this->json(['message' => 'Badge mis à jour avec succès']);
     }
 
-    #[Route('/badges/{id}', name: 'api_badge_delete', methods: ['DELETE'])]
+    #[Route('/api/badges/{id}', name: 'api_badge_delete', methods: ['DELETE'])]
     public function deleteBadge(int $id, EntityManagerInterface $em): JsonResponse
     {
         $badge = $em->getRepository(Badges::class)->find($id);

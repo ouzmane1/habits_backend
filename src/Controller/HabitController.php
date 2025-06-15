@@ -18,7 +18,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 final class HabitController extends AbstractController
 {
-    #[Route('create/habits', name: 'api_habit_create', methods: ['POST'])]
+    #[Route('/api/create/habits', name: 'api_habit_create', methods: ['POST'])]
     public function create(Request $request, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -71,7 +71,7 @@ final class HabitController extends AbstractController
         ], Response::HTTP_CREATED);
     }
 
-    #[Route('/habit/{id}/log-day', name: 'api_habit_log', methods: ['POST'])]
+    #[Route('/api/habit/{id}/log-day', name: 'api_habit_log', methods: ['POST'])]
     public function logDay(int $id, Request $request, EntityManagerInterface $em, HabitsRepository $habitRepo, BadgeService $badgeService): JsonResponse
     {
         $habit = $habitRepo->find($id);
@@ -101,7 +101,7 @@ final class HabitController extends AbstractController
         ]);
     }
 
-    #[Route('/habits/{id}', name: 'api_habit_update', methods: ['PUT'])]
+    #[Route('/api/habits/{id}', name: 'api_habit_update', methods: ['PUT'])]
     public function update(int $id, Request $request, EntityManagerInterface $em, HabitsRepository $repo, ValidatorInterface $validator): JsonResponse
     {
         $habit = $repo->find($id);
@@ -137,7 +137,7 @@ final class HabitController extends AbstractController
         return $this->json(['message' => 'Habitude mise à jour avec succès']);
     }
 
-    #[Route('/habits/{id}', name: 'api_habit_delete', methods: ['DELETE'])]
+    #[Route('/api/habits/{id}', name: 'api_habit_delete', methods: ['DELETE'])]
     public function delete(int $id, EntityManagerInterface $em, HabitsRepository $repo): JsonResponse
     {
         $habit = $repo->find($id);
@@ -152,7 +152,7 @@ final class HabitController extends AbstractController
         return $this->json(['message' => 'Habitude supprimée avec succès']);
     }
 
-    #[Route('/habits', name: 'api_habit_list', methods: ['GET'])]
+    #[Route('/api/habits', name: 'api_habit_list', methods: ['GET'])]
     public function list(HabitsRepository $repo): JsonResponse
     {
         $user = $this->getUser();
@@ -172,7 +172,7 @@ final class HabitController extends AbstractController
         return $this->json($data);
     }
 
-    #[Route('/habits/{id}', name: 'api_habit_show', methods: ['GET'])]
+    #[Route('/api/habits/{id}', name: 'api_habit_show', methods: ['GET'])]
     public function show(int $id, HabitsRepository $repo): JsonResponse
     {
         $habit = $repo->find($id);

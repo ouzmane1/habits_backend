@@ -18,7 +18,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class DefiController extends AbstractController
 {
-    #[Route('/create/defi', name: 'api_defi_create', methods: ['POST'])]
+    #[Route('/api/create/defi', name: 'api_defi_create', methods: ['POST'])]
     public function createDefi(Request $request, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -50,7 +50,7 @@ class DefiController extends AbstractController
         return $this->json(['message' => 'Défi créé avec succès.']);
     }
 
-    #[Route('/defi', name: 'api_defi_list', methods: ['GET'])]
+    #[Route('/api/defi', name: 'api_defi_list', methods: ['GET'])]
     public function listDefis(DefiRepository $defiRepo): JsonResponse
     {
         $defis = $defiRepo->findAll();
@@ -70,7 +70,7 @@ class DefiController extends AbstractController
         return $this->json($data);
     }
 
-    #[Route('/defi/{id}', name: 'api_defi_update', methods: ['PUT'])]
+    #[Route('/api/defi/{id}', name: 'api_defi_update', methods: ['PUT'])]
     public function updateDefi(int $id, Request $request, DefiRepository $defiRepo, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
     {
         $defi = $defiRepo->find($id);
@@ -111,7 +111,7 @@ class DefiController extends AbstractController
         return $this->json(['message' => 'Défi mis à jour avec succès.']);
     }
 
-    #[Route('/defi/{id}', name: 'api_defi_delete', methods: ['DELETE'])]
+    #[Route('/api/defi/{id}', name: 'api_defi_delete', methods: ['DELETE'])]
     public function deleteDefi(int $id, DefiRepository $defiRepo, EntityManagerInterface $em): JsonResponse
     {
         $defi = $defiRepo->find($id);
@@ -125,7 +125,7 @@ class DefiController extends AbstractController
         return $this->json(['message' => 'Défi supprimé avec succès.']);
     }
 
-    #[Route('/defi/{id}', name: 'api_defi_get', methods: ['GET'])]
+    #[Route('/api/defi/{id}', name: 'api_defi_get', methods: ['GET'])]
     public function getDefi(int $id, DefiRepository $defiRepo): JsonResponse
     {
         $defi = $defiRepo->find($id);
@@ -143,7 +143,7 @@ class DefiController extends AbstractController
         ]);
     }
 
-    #[Route('/defi/{id}/join', name: 'api_defi_join', methods: ['POST'])]
+    #[Route('/api/defi/{id}/join', name: 'api_defi_join', methods: ['POST'])]
     public function joinDefi(int $id, DefiRepository $defiRepo, EntityManagerInterface $em): JsonResponse
     {
         $defi = $defiRepo->find($id);
@@ -179,7 +179,7 @@ class DefiController extends AbstractController
     }
 
 
-    #[Route('/defi/{id}/log-day', name: 'api_defi_log', methods: ['POST'])]
+    #[Route('/api/defi/{id}/log-day', name: 'api_defi_log', methods: ['POST'])]
     public function logDefiDay(int $id, Request $request, DefiRepository $defiRepo, EntityManagerInterface $em, DefiService $defiService): JsonResponse
     {
         $defi = $defiRepo->find($id);
@@ -218,7 +218,7 @@ class DefiController extends AbstractController
     }
 
     //voir les points et le rang d’un utilisateur dans un défi
-    #[Route('/defi/{id}/stats', name: 'api_defi_user_stats', methods: ['GET'])]
+    #[Route('/api/defi/{id}/stats', name: 'api_defi_user_stats', methods: ['GET'])]
     public function getUserDefiStats(
         int $id,
         DefiRepository $defiRepo,
@@ -249,7 +249,7 @@ class DefiController extends AbstractController
     }
 
     //le classement complet d’un défi avec tous les participants
-    #[Route('/defi/{id}/classement', name: 'api_defi_classement', methods: ['GET'])]
+    #[Route('/api/defi/{id}/classement', name: 'api_defi_classement', methods: ['GET'])]
     public function getDefiClassement(
         int $id,
         DefiRepository $defiRepo,

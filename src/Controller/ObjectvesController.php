@@ -16,7 +16,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 final class ObjectvesController extends AbstractController
 {
-    #[Route('create/objective', name: 'api_objective_create', methods: ['POST'])]
+    #[Route('/api/create/objective', name: 'api_objective_create', methods: ['POST'])]
     public function create(
         Request $request,
         EntityManagerInterface $em,
@@ -63,7 +63,7 @@ final class ObjectvesController extends AbstractController
         ], Response::HTTP_CREATED);
     }
 
-    #[Route('/objective/{id}/log-day', name: 'api_objective_log', methods: ['POST'])]
+    #[Route('/api/objective/{id}/log-day', name: 'api_objective_log', methods: ['POST'])]
     public function logDay(int $id, Request $request, EntityManagerInterface $em, ObjectivesRepository $objectiveRepo): JsonResponse
     {
         $objective = $objectiveRepo->find($id);
@@ -87,7 +87,7 @@ final class ObjectvesController extends AbstractController
         ]);
     }
 
-    #[Route('/objective/{id}/progress', name: 'api_objective_progress', methods: ['GET'])]
+    #[Route('/api/objective/{id}/progress', name: 'api_objective_progress', methods: ['GET'])]
     public function progress(int $id, ObjectivesRepository $objectiveRepo, SuiviObjectiveRepository $logRepo): JsonResponse
     {
         $objective = $objectiveRepo->find($id);
@@ -110,7 +110,7 @@ final class ObjectvesController extends AbstractController
         ]);
     }
 
-    #[Route('/objectives/{id}', name: 'api_objective_update', methods: ['PUT'])]
+    #[Route('/api/objectives/{id}', name: 'api_objective_update', methods: ['PUT'])]
     public function update(int $id, Request $request, EntityManagerInterface $em, ValidatorInterface $validator, ObjectivesRepository $repo): JsonResponse
     {
         $objective = $repo->find($id);
@@ -140,7 +140,7 @@ final class ObjectvesController extends AbstractController
         return $this->json(['message' => 'Objectif mis à jour avec succès']);
     }
 
-    #[Route('/objectives/{id}', name: 'api_objective_delete', methods: ['DELETE'])]
+    #[Route('/api/objectives/{id}', name: 'api_objective_delete', methods: ['DELETE'])]
     public function delete(int $id, EntityManagerInterface $em, ObjectivesRepository $repo): JsonResponse
     {
         $objective = $repo->find($id);
@@ -155,7 +155,7 @@ final class ObjectvesController extends AbstractController
         return $this->json(['message' => 'Objectif supprimé avec succès']);
     }
 
-    #[Route('/objectives', name: 'api_objective_list', methods: ['GET'])]
+    #[Route('/api/objectives', name: 'api_objective_list', methods: ['GET'])]
     public function list(ObjectivesRepository $repo): JsonResponse
     {
         $user = $this->getUser();
@@ -177,7 +177,7 @@ final class ObjectvesController extends AbstractController
         return $this->json($data);
     }
 
-    #[Route('/objectives/{id}', name: 'api_objective_show', methods: ['GET'])]
+    #[Route('/api/objectives/{id}', name: 'api_objective_show', methods: ['GET'])]
     public function show(int $id, ObjectivesRepository $repo): JsonResponse
     {
         $objective = $repo->find($id);

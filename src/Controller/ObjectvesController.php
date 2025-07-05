@@ -16,7 +16,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 final class ObjectvesController extends AbstractController
 {
-    #[Route('create/objective', name: 'api_objective_create', methods: ['POST'])]
+    #[Route('/api/create/objective', name: 'api_objective_create', methods: ['POST'])]
     public function create(
         Request $request,
         EntityManagerInterface $em,
@@ -63,7 +63,7 @@ final class ObjectvesController extends AbstractController
         ], Response::HTTP_CREATED);
     }
 
-    #[Route('/objective/{id}/log-day', name: 'api_objective_log', methods: ['POST'])]
+    #[Route('/api/objective/{id}/log-day', name: 'api_objective_log', methods: ['POST'])]
     public function logDay(int $id, Request $request, EntityManagerInterface $em, ObjectivesRepository $objectiveRepo): JsonResponse
     {
         $objective = $objectiveRepo->find($id);
@@ -87,7 +87,7 @@ final class ObjectvesController extends AbstractController
         ]);
     }
 
-    #[Route('/objective/{id}/progress', name: 'api_objective_progress', methods: ['GET'])]
+    #[Route('/api/objective/{id}/progress', name: 'api_objective_progress', methods: ['GET'])]
     public function progress(int $id, ObjectivesRepository $objectiveRepo, SuiviObjectiveRepository $logRepo): JsonResponse
     {
         $objective = $objectiveRepo->find($id);
@@ -109,5 +109,93 @@ final class ObjectvesController extends AbstractController
             'progress' => $progress . '%'
         ]);
     }
+
+    #[Route('/api/objectives/{id}', name: 'api_objective_update', methods: ['PUT'])]
+    public function update(int $id, Request $request, EntityManagerInterface $em, ValidatorInterface $validator, ObjectivesRepository $repo): JsonResponse
+    {
+        $objective = $repo->find($id);
+
+        if (!$objective) {
+            return $this->json(['error' => 'Objectif introuvable'], Response::HTTP_NOT_FOUND);
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        $objective->setTitre($data['titre'] ?? $objective->getTitre());
+        $objective->setDescription($data['description'] ?? $objective->getDescription());
+        $objective->setDateStart(new \DateTime($data['date_start'] ?? $objective->getDateStart()->format('Y-m-d')));
+        $objective->setDateEnd(new \DateTime($data['date_end'] ?? $objective->getDateEnd()->format('Y-m-d')));
+
+        $errors = $validator->validate($objective);
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[$error->getPropertyPath()] = $error->getMessage();
+            }
+            return $this->json(['errors' => $errorMessages], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $em->flush();
+
+        return $this->json(['message' => 'Objectif mis à jour avec succès']);
+    }
+
+    #[Route('/api/objectives/{id}', name: 'api_objective_delete', methods: ['DELETE'])]
+    public function delete(int $id, EntityManagerInterface $em, ObjectivesRepository $repo): JsonResponse
+    {
+        $objective = $repo->find($id);
+
+        if (!$objective) {
+            return $this->json(['error' => 'Objectif introuvable'], Response::HTTP_NOT_FOUND);
+        }
+
+        $em->remove($objective);
+        $em->flush();
+
+        return $this->json(['message' => 'Objectif supprimé avec succès']);
+    }
+
+    #[Route('/api/objectives', name: 'api_objective_list', methods: ['GET'])]
+    public function list(ObjectivesRepository $repo): JsonResponse
+    {
+        $user = $this->getUser();
+        $objectives = $repo->findBy(['users_id' => $user]);
+
+        $data = [];
+        foreach ($objectives as $obj) {
+            $data[] = [
+                'id' => $obj->getId(),
+                'titre' => $obj->getTitre(),
+                'description' => $obj->getDescription(),
+                'date_start' => $obj->getDateStart()->format('Y-m-d'),
+                'date_end' => $obj->getDateEnd()->format('Y-m-d'),
+                'statut' => $obj->getStatut(),
+            ];
+        }
+
+        return $this->json($data);
+    }
+
+    #[Route('/api/objectives/{id}', name: 'api_objective_show', methods: ['GET'])]
+    public function show(int $id, ObjectivesRepository $repo): JsonResponse
+    {
+        $objective = $repo->find($id);
+
+        if (!$objective || $objective->getUsersId() !== $this->getUser()) {
+            return $this->json(['error' => 'Objectif introuvable ou accès non autorisé'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json([
+            'id' => $objective->getId(),
+            'titre' => $objective->getTitre(),
+            'description' => $objective->getDescription(),
+            'date_start' => $objective->getDateStart()->format('Y-m-d'),
+            'date_end' => $objective->getDateEnd()->format('Y-m-d'),
+            'statut' => $objective->getStatut(),
+        ]);
+    }
+    
+
+
 
 }

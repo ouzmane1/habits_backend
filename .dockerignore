@@ -1,0 +1,10 @@
+var/
+vendor/
+.git/
+.gitignore
+README.md
+.env.local
+.env.test
+docker-compose.yml
+Dockerfile
+.dockerignore 

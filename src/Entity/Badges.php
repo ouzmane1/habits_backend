@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: BadgesRepository::class)]
 class Badges
@@ -17,16 +18,16 @@ class Badges
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'Le titre est obligatoire.')]
     private ?string $title = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Assert\NotBlank(message: 'La description est obligatoire.')]
     private ?string $description = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $type_critere = null;
-
-    #[ORM\Column]
-    private ?bool $obtained = null;
+    #[ORM\Column(length: 100, unique: true)]
+    #[Assert\NotBlank(message: 'Le code est obligatoire.')]
+    private string $code;
 
     #[ORM\Column(length: 255)]
     private ?string $icon = null;
@@ -78,26 +79,13 @@ class Badges
         return $this;
     }
 
-    public function getTypeCritere(): ?string
+    public function getCode(): string
     {
-        return $this->type_critere;
+        return $this->code;
     }
-
-    public function setTypeCritere(string $type_critere): static
+    public function setCode(string $code): static
     {
-        $this->type_critere = $type_critere;
-
-        return $this;
-    }
-
-    public function isObtained(): ?bool
-    {
-        return $this->obtained;
-    }
-
-    public function setObtained(bool $obtained): static
-    {
-        $this->obtained = $obtained;
+        $this->code = $code;
 
         return $this;
     }

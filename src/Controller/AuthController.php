@@ -16,6 +16,8 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Security\Http\Authentication\UserAuthenticatorInterface;
 use App\Service\TokenService;
+use App\Service\LogMongodb;
+use Doctrine\ODM\MongoDB\DocumentManager as MongoDocumentManager;
 
 class AuthController extends AbstractController
 {
@@ -26,7 +28,9 @@ class AuthController extends AbstractController
         EntityManagerInterface $em,
         ValidatorInterface $validator,
         JWTTokenManagerInterface $jwtManager,
-        TokenService $tokenService
+        TokenService $tokenService,
+        LogMongodb $logMongodb,
+        MongoDocumentManager $mongoDm
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
 
@@ -58,6 +62,13 @@ class AuthController extends AbstractController
             foreach ($allErrors as $error) {
                 $errorMessages[$error->getPropertyPath()] = $error->getMessage();
             }
+            // Log de l’échec d’inscription
+            $logMongodb->logUserAction(
+                $mongoDm,
+                $email ?? 'inconnu',
+                'Inscription',
+                false
+            );
             return new JsonResponse(['errors' => $errorMessages], 400);
         }
 
@@ -65,9 +76,16 @@ class AuthController extends AbstractController
         $em->persist($user);
         $em->flush();
 
-        // Générer le JWT pour le nouvel utilisateur
+        // Log de la réussite d’inscription
+        $logMongodb->logUserAction(
+            $mongoDm,
+            $email,
+            'Inscription',
+            true
+        );
+        // Génére le JWT pour le nouvel utilisateur
         $token = $jwtManager->create($user);
-        // Générer le refresh token
+        // Génére le refresh token
         $refreshToken = $tokenService->createRefreshToken($user);
 
         return new JsonResponse([
@@ -106,18 +124,38 @@ class AuthController extends AbstractController
             'token' => $newJwt,
         ]);
     }
-
     #[Route('/api/logout', name: 'api_logout', methods: ['POST'])]
-    public function logout(Request $request, RefreshTokenRepository $repo): JsonResponse
-    {
+    public function logout(
+        Request $request,
+        RefreshTokenRepository $repo,
+        LogMongodb $logMongodb,
+        MongoDocumentManager $mongoDm
+    ): JsonResponse {
         $refreshToken = $request->get('refresh_token');
         $token = $repo->findOneBy(['token' => $refreshToken]);
+        $user = $this->getUser();
+        $email = $user ? $user->getUserIdentifier() : 'unknown';
+
+        $success = false;
         if ($token) {
             $token->setRevoked(true);
             $repo->save($token, true);
+            $success = true;
         }
 
-        return new JsonResponse(['message' => 'Logged out']);
+        // Log de la tentative de déconnexion
+        $logMongodb->logUserAction(
+            $mongoDm,
+            $email,
+            'Déconnexion',
+            $success
+        );
+
+        if ($success) {
+            return new JsonResponse(['message' => 'Logged out']);
+        } else {
+            return new JsonResponse(['message' => 'Invalid refresh token'], 400);
+        }
     }
 
     #[Route('/api/me', name: 'api_me', methods: ['GET'])]

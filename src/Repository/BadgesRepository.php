@@ -3,6 +3,8 @@
 namespace App\Repository;
 
 use App\Entity\Badges;
+use App\Entity\Habits;
+use App\Entity\Users;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -40,4 +42,5 @@ class BadgesRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
+        
 }

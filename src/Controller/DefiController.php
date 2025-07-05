@@ -7,6 +7,7 @@ use App\Entity\DefiProgress;
 use App\Entity\DefiUsers;
 use App\Repository\DefiProgressRepository;
 use App\Repository\DefiRepository;
+use App\Repository\DefiUsersRepository;
 use App\Service\DefiService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -30,45 +31,76 @@ class DefiController extends AbstractController
         $defi->setDateEnd(new \DateTime($data['date_end']));
         $defi->setCreateBy($this->getUser()->getUserIdentifier());
 
-        // Validation des données
-        $errors = $validator->validate($defi);
+        // Calcul automatique des points en fonction de la durée
+        $duration = $defi->getDateStart()->diff($defi->getDateEnd())->days + 1;
+        $points = $duration * 10;
+        $defi->setTotalPoints($points);
 
+        // Validation
+        $errors = $validator->validate($defi);
         if (count($errors) > 0) {
             $errorMessages = [];
             foreach ($errors as $error) {
                 $errorMessages[$error->getPropertyPath()] = $error->getMessage();
             }
 
-            return $this->json([
-                'errors' => $errorMessages
-            ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
+            return $this->json(['errors' => $errorMessages], JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $em->persist($defi);
         $em->flush();
 
-        return $this->json(['message' => 'Défi créé avec succès.']);
+        return $this->json(['message' => 'Défi créé avec succès.', 'points' => $points]);
     }
+
 
     #[Route('/api/defi', name: 'api_defi_list', methods: ['GET'])]
     public function listDefis(DefiRepository $defiRepo): JsonResponse
     {
         $defis = $defiRepo->findAll();
+        $today = new \DateTimeImmutable();
+        $user = $this->getUser(); // Récupère l'utilisateur connecté
         $data = [];
 
         foreach ($defis as $defi) {
+            $participants = $defi->getDefiUsers();
+            $participantsCount = count($participants);
+
+            // Vérifie si l'utilisateur est inscrit à ce défi
+            $isActive = false;
+            foreach ($participants as $participant) {
+                if ($participant->getUsersId() === $user) {
+                    $isActive = true;
+                    break;
+                }
+            }
+
+            $dateEnd = $defi->getDateEnd();
+            $daysRemaining = $today <= $dateEnd
+                ? $today->diff($dateEnd)->days
+                : 0;
+
             $data[] = [
                 'id' => $defi->getId(),
                 'title' => $defi->getTitle(),
                 'description' => $defi->getDescription(),
                 'date_start' => $defi->getDateStart()->format('Y-m-d'),
-                'date_end' => $defi->getDateEnd()->format('Y-m-d'),
+                'date_end' => $dateEnd->format('Y-m-d'),
                 'created_by' => $defi->getCreateBy(),
+                'total_points' => $defi->getTotalPoints(),
+                'participants' => $participantsCount,
+                'days_remaining' => $daysRemaining,
+                'isActive' => $isActive,
             ];
         }
 
+        // Tri décroissant par nombre de jours restants
+        usort($data, fn($a, $b) => $b['days_remaining'] <=> $a['days_remaining']);
+
         return $this->json($data);
     }
+
+
 
     #[Route('/api/defi/{id}', name: 'api_defi_update', methods: ['PUT'])]
     public function updateDefi(int $id, Request $request, DefiRepository $defiRepo, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
@@ -133,15 +165,39 @@ class DefiController extends AbstractController
             return $this->json(['error' => 'Défi introuvable'], 404);
         }
 
+        $user = $this->getUser(); // utilisateur connecté
+        $participants = $defi->getDefiUsers();
+        $participantsCount = count($participants);
+
+        // Vérifie si l'utilisateur participe à ce défi
+        $isActive = false;
+        foreach ($participants as $participant) {
+            if ($participant->getUsersId() === $user) {
+                $isActive = true;
+                break;
+            }
+        }
+
+        $today = new \DateTimeImmutable();
+        $dateEnd = $defi->getDateEnd();
+        $daysRemaining = $today <= $dateEnd
+            ? $today->diff($dateEnd)->days
+            : 0;
+
         return $this->json([
             'id' => $defi->getId(),
             'title' => $defi->getTitle(),
             'description' => $defi->getDescription(),
             'date_start' => $defi->getDateStart()->format('Y-m-d'),
-            'date_end' => $defi->getDateEnd()->format('Y-m-d'),
+            'date_end' => $dateEnd->format('Y-m-d'),
             'created_by' => $defi->getCreateBy(),
+            'total_points' => $defi->getTotalPoints(),
+            'participants' => $participantsCount,
+            'days_remaining' => $daysRemaining,
+            'isActive' => $isActive,
         ]);
     }
+
 
     #[Route('/api/defi/{id}/join', name: 'api_defi_join', methods: ['POST'])]
     public function joinDefi(int $id, DefiRepository $defiRepo, EntityManagerInterface $em): JsonResponse
@@ -242,9 +298,9 @@ class DefiController extends AbstractController
 
         return $this->json([
             'defi' => $defi->getTitle(),
-            'points' => $defiUser->getPoints(),
-            'rank' => $defiUser->getRank(),
-            'participationDate' => $defiUser->getParticipationDate()->format('Y-m-d'),
+            'points' => $defiUser->getPoint(),
+            'rank' => $defiUser->getRanking(),
+            'participationDate' => $defiUser->getDateInscription()->format('Y-m-d'),
         ]);
     }
 
@@ -264,7 +320,7 @@ class DefiController extends AbstractController
         $classement = $em->getRepository(DefiUsers::class)->createQueryBuilder('du')
             ->where('du.defi_id = :defi')
             ->setParameter('defi', $defi)
-            ->orderBy('du.points', 'DESC')
+            ->orderBy('du.point', 'DESC')
             ->getQuery()
             ->getResult();
 
@@ -272,9 +328,9 @@ class DefiController extends AbstractController
         foreach ($classement as $index => $defiUser) {
             $data[] = [
                 'position' => $index + 1,
-                'username' => $defiUser->getUsersId()->getUsername(), // change si tu utilises un autre champ
-                'points' => $defiUser->getPoints(),
-                'rank' => $defiUser->getRank(),
+                'username' => $defiUser->getUsersId()->getName(), // change si tu utilises un autre champ
+                'point' => $defiUser->getPoint(),
+                'rank' => $defiUser->getRanking(),
             ];
         }
 
@@ -283,6 +339,69 @@ class DefiController extends AbstractController
             'classement' => $data,
         ]);
     }
+    #[Route('/api/defi/{id}/leave', name: 'api_defi_leave', methods: ['POST'])]
+    public function quitDefi(int $id, EntityManagerInterface $em, DefiRepository $defiRepo, DefiUsersRepository $defiUsersRepo): JsonResponse
+    {
+        $defi = $defiRepo->find($id);
+        if (!$defi) {
+            return $this->json(['error' => 'Défi introuvable'], 404);
+        }
+
+        $user = $this->getUser();
+
+        $defiUser = $defiUsersRepo->findOneBy([
+            'defi_id' => $defi,
+            'users_id' => $user,
+        ]);
+
+        if (!$defiUser) {
+            return $this->json(['error' => 'Vous ne participez pas à ce défi'], 400);
+        }
+
+        $em->remove($defiUser);
+        $em->flush();
+
+        return $this->json(['message' => 'Vous avez quitté le défi avec succès']);
+    }
+
+    #[Route('/api/defi/{id}/progress', name: 'api_defi_progress', methods: ['GET'])]
+    public function defiProgress(
+        int $id,
+        DefiRepository $defiRepo,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        $defi = $defiRepo->find($id);
+        if (!$defi) {
+            return $this->json(['error' => 'Défi introuvable'], Response::HTTP_NOT_FOUND);
+        }
+
+        $user = $this->getUser();
+
+        // Récupérer les infos de participation
+        $defiUser = $em->getRepository(DefiUsers::class)->findOneBy([
+            'users_id' => $user,
+            'defi_id' => $defi
+        ]);
+
+        if (!$defiUser) {
+            return $this->json(['error' => 'L’utilisateur ne participe pas à ce défi.'], Response::HTTP_NOT_FOUND);
+        }
+
+        $userPoints = $defiUser->getPoint() ?? 0;
+        $totalPoints = $defi->getTotalPoints() ?? 0;
+
+        $progress = ($totalPoints > 0)
+            ? round(($userPoints / $totalPoints) * 100, 2)
+            : 0;
+
+        return $this->json([
+            'total_points' => $totalPoints,
+            'user_points' => $userPoints,
+            'progress' => $progress . '%'
+        ]);
+    }
+
+
 
 
 

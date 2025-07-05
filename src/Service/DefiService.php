@@ -35,16 +35,21 @@ class DefiService
 
         if (!$defiUser) return;
 
-        $points = $this->em->getRepository(DefiProgress::class)->count([
-            'user' => $user,
+        // Compter les jours validés
+        $completedDays = $this->em->getRepository(DefiProgress::class)->count([
+            'user_id' => $user,
             'defi' => $defi,
-            'done' => true,
+            'finish' => true,
         ]);
+
+        // 10 points par jour complété
+        $points = $completedDays * 10;
 
         $defiUser->setPoints($points);
         $this->em->persist($defiUser);
         $this->em->flush();
     }
+
 
     public function updateDefiRankings(Defi $defi): void
     {
@@ -61,7 +66,6 @@ class DefiService
 
         $this->em->flush();
     }
-
 
 
 }

@@ -22,6 +22,7 @@ final class BadgeController extends AbstractController
 
         $data = array_map(function (Badges $badge) {
             return [
+                'id' => $badge->getId(),
                 'title' => $badge->getTitle(),
                 'description' => $badge->getDescription(),
                 'icon' => $badge->getIcon(),

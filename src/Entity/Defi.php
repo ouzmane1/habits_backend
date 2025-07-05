@@ -37,6 +37,9 @@ class Defi
     )]
     private ?\DateTime $date_end = null;
 
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
+    private ?int $totalPoints = null;
+
     #[ORM\Column(length: 255)]
     private ?string $create_by = null;
 
@@ -114,6 +117,18 @@ class Defi
     public function setDateEnd(\DateTime $date_end): static
     {
         $this->date_end = $date_end;
+
+        return $this;
+    }
+
+    public function getTotalPoints(): ?int
+    {
+        return $this->totalPoints;
+    }
+
+    public function setTotalPoints(int $totalPoints): static
+    {
+        $this->totalPoints = $totalPoints;
 
         return $this;
     }

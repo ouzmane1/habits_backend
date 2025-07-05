@@ -2,7 +2,9 @@
 
 namespace App\Repository;
 
+use App\Entity\Defi;
 use App\Entity\DefiProgress;
+use App\Entity\Users;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -15,29 +17,16 @@ class DefiProgressRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, DefiProgress::class);
     }
-
-    //    /**
-    //     * @return DefiProgress[] Returns an array of DefiProgress objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('d')
-    //            ->andWhere('d.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('d.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?DefiProgress
-    //    {
-    //        return $this->createQueryBuilder('d')
-    //            ->andWhere('d.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    public function countCompletedDays(Users $user, Defi $defi): int
+    {
+        return $this->createQueryBuilder('dp')
+            ->select('COUNT(DISTINCT dp.date)')
+            ->andWhere('dp.user_id = :user')
+            ->andWhere('dp.defi = :defi')
+            ->andWhere('dp.finish = true')
+            ->setParameter('user', $user)
+            ->setParameter('defi', $defi)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }

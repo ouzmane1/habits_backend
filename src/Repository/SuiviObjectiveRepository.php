@@ -16,28 +16,12 @@ class SuiviObjectiveRepository extends ServiceEntityRepository
         parent::__construct($registry, SuiviObjective::class);
     }
 
-    //    /**
-    //     * @return SuiviObjective[] Returns an array of SuiviObjective objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('s')
-    //            ->andWhere('s.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('s.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?SuiviObjective
-    //    {
-    //        return $this->createQueryBuilder('s')
-    //            ->andWhere('s.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+   public function findByUserObjectives(array $objectiveIds): array
+    {
+        return $this->createQueryBuilder('s')
+            ->where('s.objective IN (:ids)')
+            ->setParameter('ids', $objectiveIds)
+            ->getQuery()
+            ->getResult();
+    }
 }

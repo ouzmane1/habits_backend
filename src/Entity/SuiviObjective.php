@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\SuiviObjectiveRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: SuiviObjectiveRepository::class)]
@@ -13,7 +14,7 @@ class SuiviObjective
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTime $date = null;
 
     #[ORM\ManyToOne(inversedBy: 'suiviObjectives')]

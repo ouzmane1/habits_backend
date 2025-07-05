@@ -10,6 +10,7 @@
         "doctrine/dbal": "^3",
         "doctrine/doctrine-bundle": "^2.14",
         "doctrine/doctrine-migrations-bundle": "^3.4",
+        "doctrine/mongodb-odm-bundle": "^5.3",
         "doctrine/orm": "^3.3",
         "lexik/jwt-authentication-bundle": "^3.1",
         "nelmio/cors-bundle": "*",
@@ -101,7 +102,7 @@
     },
     "require-dev": {
         "doctrine/doctrine-fixtures-bundle": "^4.1",
-        "phpunit/phpunit": "^9.5",
+        "phpunit/phpunit": "^9.6",
         "symfony/browser-kit": "7.2.*",
         "symfony/css-selector": "7.2.*",
         "symfony/debug-bundle": "7.2.*",

@@ -169,7 +169,6 @@ final class ObjectvesController extends AbstractController
                 'description' => $obj->getDescription(),
                 'date_start' => $obj->getDateStart()->format('Y-m-d'),
                 'date_end' => $obj->getDateEnd()->format('Y-m-d'),
-                'progres' => $obj->getProgres(),
                 'statut' => $obj->getStatut(),
             ];
         }
@@ -192,7 +191,6 @@ final class ObjectvesController extends AbstractController
             'description' => $objective->getDescription(),
             'date_start' => $objective->getDateStart()->format('Y-m-d'),
             'date_end' => $objective->getDateEnd()->format('Y-m-d'),
-            'progres' => $objective->getProgres(),
             'statut' => $objective->getStatut(),
         ]);
     }

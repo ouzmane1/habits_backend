@@ -56,9 +56,9 @@ class BadgeService
      * Calcule le nombre de jours consécutifs où l'utilisateur a coché l'habitude.
      * Commence par aujourd'hui et compte les jours précédents jusqu'à ce qu'il y ait une interruption.
      */
-    public function getConsecutiveDays(Users $user, Habits $habit): int
+    public function getConsecutiveDays(Habits $habit): int
     {
-        $checkedDates = $this->suiviHabitRepository->findCheckedDatesByUserAndHabit($user, $habit);
+        $checkedDates = $this->suiviHabitRepository->findCheckedDatesByUserAndHabit($habit);
 
         if (empty($checkedDates)) {
             return 0;
@@ -103,7 +103,7 @@ class BadgeService
      */
     public function checkAndAward7DayStreak(Users $user, Habits $habit): bool
     {
-        $consecutiveDays = $this->getConsecutiveDays($user, $habit);
+        $consecutiveDays = $this->getConsecutiveDays($habit);
         error_log("Consecutive days : $consecutiveDays");
         if ($consecutiveDays >= 7) {
             return $this->awardBadge($user, '7_day_streak');
@@ -128,7 +128,7 @@ class BadgeService
             return;
         }
 
-        // Vérifie si l'utilisateur a complété au moins une habitude
+        // On vérifie si l'utilisateur a complété au moins une habitude
         $habitsCompletedCount = $this->suiviHabitRepository->countHabitsCompletedByUser($user);
 
         if ($habitsCompletedCount > 0) {

@@ -6,6 +6,7 @@ namespace App\Controller;
 use App\Entity\RefreshToken;
 use App\Entity\Users;
 use App\Repository\RefreshTokenRepository;
+use App\Repository\SuivihabitsRepository;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -42,9 +43,13 @@ class AuthController extends AbstractController
         $user->setName($name);
         $user->setEmail($email);
         $user->setPassword($plainPassword);
-        $user->setRoles(['ROLE_USER']);
+        if ($this->isGranted('ROLE_ADMIN') && isset($data['roles'])) {
+        $user->setRoles($data['roles']);
+        } else {
+            $user->setRoles([Users::ROLE_USER]);
+        }
 
-        // Validation des propriétés (NotBlank, Length, Regex, etc.)
+        // Validation des propriétés 
         $propertyErrors = $validator->validate($user, null, ['Default']);
 
         // Si aucune erreur sur les propriétés, alors on vérifie l’unicité
@@ -91,6 +96,7 @@ class AuthController extends AbstractController
         return new JsonResponse([
         'token' => $token,
         'refresh_token' => $refreshToken,
+        'roles' => $user->getRoles(),
         'message' => 'Inscription réussie et authentification automatique.'
         ]);
 
@@ -136,11 +142,9 @@ class AuthController extends AbstractController
         $user = $this->getUser();
         $email = $user ? $user->getUserIdentifier() : 'unknown';
 
-        $success = false;
         if ($token) {
             $token->setRevoked(true);
             $repo->save($token, true);
-            $success = true;
         }
 
         // Log de la tentative de déconnexion
@@ -148,30 +152,93 @@ class AuthController extends AbstractController
             $mongoDm,
             $email,
             'Déconnexion',
-            $success
+            true
         );
 
-        if ($success) {
-            return new JsonResponse(['message' => 'Logged out']);
-        } else {
-            return new JsonResponse(['message' => 'Invalid refresh token'], 400);
-        }
+        return new JsonResponse(['message' => 'Invalid refresh token'], 400);
     }
 
     #[Route('/api/me', name: 'api_me', methods: ['GET'])]
-    public function me(): JsonResponse
-    {
+    public function me(
+        SuivihabitsRepository $suiviHabitsRepo,
+    ): JsonResponse {
         $user = $this->getUser();
 
         if (!$user) {
             return $this->json(['error' => 'Unauthorized'], 401);
         }
 
+        // Compter les habitudes complétées (liées à l'utilisateur via habits)
+        $completedHabits = $suiviHabitsRepo->createQueryBuilder('s')
+            ->join('s.habits_id', 'h')
+            ->where('s.finish = true')
+            ->andWhere('h.users_id = :user')
+            ->setParameter('user', $user)
+            ->select('COUNT(s.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        // Nombre de badges associés à l'utilisateur (relation ManyToMany)
+        $badgesCount = count($user->getBadges());
+
         return new JsonResponse([
             'name' => $user->getName(),
             'email' => $user->getEmail(),
-            'role' => $user->getRoles(),
+            'roles' => $user->getRoles(),
+            'completed_habits' => (int) $completedHabits,
+            'badges_count' => $badgesCount,
         ]);
     }
+
+    #[Route('/api/me/update', name: 'api_me_update', methods: ['PUT'])]
+    public function updateMe(
+        Request $request,
+        EntityManagerInterface $em,
+        ValidatorInterface $validator
+    ): JsonResponse {
+        $user = $this->getUser();
+
+        if (!$user) {
+            return $this->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        $email = $data['email'] ?? null;
+        $name = $data['name'] ?? null;
+
+        if ($email) {
+            $user->setEmail($email);
+        }
+
+        if ($name) {
+            $user->setName($name);
+        }
+
+        // Valider les propriétés modifiées
+        $errors = $validator->validate($user);
+
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[$error->getPropertyPath()] = $error->getMessage();
+            }
+
+            return $this->json(['errors' => $errorMessages], 400);
+        }
+
+        $em->persist($user);
+        $em->flush();
+
+        return $this->json([
+            'message' => 'Informations mises à jour avec succès.',
+            'user' => [
+                'name' => $user->getName(),
+                'email' => $user->getEmail(),
+            ]
+        ]);
+    }
+
+
 }
 

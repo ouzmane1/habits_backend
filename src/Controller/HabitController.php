@@ -42,7 +42,6 @@ final class HabitController extends AbstractController
                 $frequenceEnum = FrequenceType::from($data['frequence']);
                 $habit->setFrequence($frequenceEnum);
             } catch (\ValueError $e) {
-                // mauvaise valeur = laisser null → déclenchera la contrainte @Assert\NotNull
             }
         }
 
@@ -203,8 +202,8 @@ final class HabitController extends AbstractController
     ): JsonResponse {
         $user = $this->getUser();
         $today = new \DateTimeImmutable();
-        $dayOfWeek = $today->format('N'); // 1 (lundi) à 7 (dimanche)
-        $dayOfMonth = $today->format('j'); // 1 à 31
+        $dayOfWeek = $today->format('N'); 
+        $dayOfMonth = $today->format('j'); 
 
         $tasks = [];
 

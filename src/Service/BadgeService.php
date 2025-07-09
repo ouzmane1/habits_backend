@@ -37,7 +37,7 @@ class BadgeService
         // Vérifie si l'utilisateur a déjà ce badge
         foreach ($user->getBadges() as $badge) {
             if ($badge->getCode() === $badgeCode) {
-                return false; // badge déjà attribué
+                return false; 
             }
         }
 
@@ -70,11 +70,9 @@ class BadgeService
         $today = new \DateTimeImmutable('today');
 
         foreach ($checkedDates as $date) {
-            // Convertit en DateTimeImmutable pour manipuler les dates facilement
             $date = \DateTimeImmutable::createFromMutable($date);
 
             if ($count === 0) {
-                // Le premier jour doit être aujourd'hui pour commencer la série
                 if ($date != $today) {
                     break;
                 }
@@ -115,7 +113,7 @@ class BadgeService
     public function checkPremierPas(Users $user): void
     {
         $badgeRepo = $this->em->getRepository(Badges::class);
-        $badgeCode = 'first_habit'; // Le code unique de ton badge "Premier Pas"
+        $badgeCode = 'first_habit';
         $badge = $badgeRepo->findOneBy(['code' => $badgeCode]);
 
         if (!$badge) {
@@ -132,7 +130,6 @@ class BadgeService
         $habitsCompletedCount = $this->suiviHabitRepository->countHabitsCompletedByUser($user);
 
         if ($habitsCompletedCount > 0) {
-            // Attribue le badge
             $this->awardBadge($user, $badgeCode);
         }
     }

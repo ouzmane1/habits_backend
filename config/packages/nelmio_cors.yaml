@@ -6,8 +6,12 @@ nelmio_cors:
         allow_headers: ['Content-Type', 'Authorization']
         expose_headers: ['Link']
         max_age: 3600
+
     paths:
         '^/api/':
-            allow_origin: ['http://localhost:5173']
+            origin_regex: true
+            allow_origin: ['^http://localhost:[0-9]+']
             allow_headers: ['*']
             allow_methods: ['POST', 'PUT', 'GET', 'DELETE', 'OPTIONS']
+            expose_headers: ['Link']
+            max_age: 3600

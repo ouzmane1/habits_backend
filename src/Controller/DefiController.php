@@ -15,11 +15,13 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class DefiController extends AbstractController
 {
-    #[Route('/api/create/defi', name: 'api_defi_create', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route('/api/admin/create/defi', name: 'api_defi_create', methods: ['POST'])]
     public function createDefi(Request $request, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -100,9 +102,8 @@ class DefiController extends AbstractController
         return $this->json($data);
     }
 
-
-
-    #[Route('/api/defi/{id}', name: 'api_defi_update', methods: ['PUT'])]
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route('/api/admin/defi/{id}', name: 'api_defi_update', methods: ['PUT'])]
     public function updateDefi(int $id, Request $request, DefiRepository $defiRepo, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
     {
         $defi = $defiRepo->find($id);
@@ -143,7 +144,8 @@ class DefiController extends AbstractController
         return $this->json(['message' => 'Défi mis à jour avec succès.']);
     }
 
-    #[Route('/api/defi/{id}', name: 'api_defi_delete', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route('/api/admin/defi/{id}', name: 'api_defi_delete', methods: ['DELETE'])]
     public function deleteDefi(int $id, DefiRepository $defiRepo, EntityManagerInterface $em): JsonResponse
     {
         $defi = $defiRepo->find($id);
@@ -165,7 +167,7 @@ class DefiController extends AbstractController
             return $this->json(['error' => 'Défi introuvable'], 404);
         }
 
-        $user = $this->getUser(); // utilisateur connecté
+        $user = $this->getUser();
         $participants = $defi->getDefiUsers();
         $participantsCount = count($participants);
 
@@ -220,7 +222,6 @@ class DefiController extends AbstractController
             return $this->json(['message' => 'Vous êtes déjà inscrit à ce défi.']);
         }
 
-        // Crée une nouvelle inscription
         $defiUser = new DefiUsers();
         $defiUser->setUsersId($user);
         $defiUser->setDefiId($defi);
@@ -400,9 +401,4 @@ class DefiController extends AbstractController
             'progress' => $progress . '%'
         ]);
     }
-
-
-
-
-
 }

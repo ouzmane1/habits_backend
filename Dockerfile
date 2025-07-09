@@ -1,23 +1,31 @@
 FROM php:8.2-apache
 
-# Installer les dépendances PHP & outils
 RUN apt-get update && apt-get install -y \
-    git unzip zip curl libicu-dev libzip-dev libonig-dev \
-    && docker-php-ext-install intl zip pdo pdo_mysql
+    git \
+    unzip \
+    zip \
+    curl \
+    libicu-dev \
+    libzip-dev \
+    libonig-dev \
+    libpq-dev \         
+    && docker-php-ext-install intl zip pdo pdo_mysql \
+    && docker-php-ext-install pdo_pgsql \  
+    && pecl install mongodb \
+    && docker-php-ext-enable mongodb
 
-# Activer mod_rewrite
 RUN a2enmod rewrite
 
-# Copier le code Symfony dans le conteneur
-COPY . /var/www/html/
+COPY composer.json composer.lock /var/www/html/
 
-# Définir le répertoire de travail
-WORKDIR /var/www/html/
-
-# Installe Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Installer les dépendances Symfony
-RUN composer install
+COPY apache/000-default.conf /etc/apache2/sites-available/000-default.conf
+
+WORKDIR /var/www/html/
+
+COPY . /var/www/html/
+
+RUN composer install --optimize-autoloader
 
 EXPOSE 80

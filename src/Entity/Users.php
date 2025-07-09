@@ -16,6 +16,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: UsersRepository::class)]
 class Users implements UserInterface, PasswordAuthenticatedUserInterface
 {
+    public const ROLE_USER = 'ROLE_USER';
+    public const ROLE_ADMIN = 'ROLE_ADMIN';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -323,13 +326,22 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-        return $this->roles;
+        $roles = $this->roles;
+        // garantit que chaque utilisateur a au moins ROLE_USER
+        if (!in_array(self::ROLE_USER, $roles)) {
+            $roles[] = self::ROLE_USER;
+        }
+
+        return array_unique($roles);
     }
 
-    public function setRoles(array $roles): static
+    public function setRoles(array $roles): self
     {
-        $this->roles = $roles;
+        if (!in_array(self::ROLE_USER, $roles)) {
+            $roles[] = self::ROLE_USER;
+        }
 
+        $this->roles = array_unique($roles);
         return $this;
     }
 
